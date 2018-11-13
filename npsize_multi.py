@@ -45,9 +45,11 @@ def findrod():
     
 dirpath = os.getcwd()
 nptype = -1 #nanoparticle type
-rodh = 0
-rodw = 0
-rodn = 0
+nph = 0
+npw = 0
+npn = 0
+kernel = np.ones((5,5),np.uint8)
+
 
 for foldername in os.listdir(dirpath):
     if foldername.startswith('sphere'):
@@ -57,7 +59,6 @@ for foldername in os.listdir(dirpath):
     elif foldername.startswith('rod'):
         nptype = 2
     for filename in os.listdir(dirpath + '\\' + foldername):
-        print (filename)
         if filename.endswith('.jpg') or filename.endswith('.tif'):
             img0 = cv2.imread(dirpath + '\\' + foldername + '\\' + filename)
             img = cv2.cvtColor(img0,cv2.COLOR_BGR2GRAY)
@@ -65,12 +66,30 @@ for foldername in os.listdir(dirpath):
             mag = calc_mag()
             img_blur = cv2.GaussianBlur(img,(5,5),0)
             cv2.namedWindow('dst')
-            cv2.createTrackbar('Thresh','dst',0,255,nothing)
+            cv2.createTrackbar('Thresh','dst',0,100,nothing)
+            #cv2.createTrackbar('Dist','dst',0,100,nothing)
             threshflag = 0
+            distflag = 0
             while(True):
                 thresh = cv2.getTrackbarPos('Thresh','dst')
+                #dist = cv2.getTrackbarPos('Dist','dst')
                 if thresh != threshflag:
-                    ret,img_bw = cv2.threshold(img_blur,thresh,255,cv2.THRESH_BINARY_INV)
+                    ret,img_bw = cv2.threshold(img_blur,20+thresh,255,cv2.THRESH_BINARY_INV)
+
+                    #img_bw = cv2.morphologyEx(img_bw,cv2.MORPH_OPEN,kernel,iterations = 2)
+                    #sure_bg = cv2.dilate(img_bw,kernel,iterations = 1)
+                    #dist_transform = cv2.distanceTransform(img_bw,cv2.DIST_L2,5)
+                    #ret, sure_fg = cv2.threshold(dist_transform,dist,255,cv2.THRESH_BINARY)
+                    #sure_fg = np.uint8(sure_fg)
+                    #unknown = cv2.subtract(sure_bg,sure_fg)
+                    #ret, markers = cv2.connectedComponents(sure_fg)
+                    #markers = markers+1
+                    #markers[unknown == 255] = 0
+                    #markers = cv2.watershed(img0,markers)
+                    #img_bw[markers == -1] = 0
+                    #img_bw_resize = cv2.resize(img_bw,(800,600),interpolation = cv2.INTER_AREA)
+                    #cv2.imshow('bw',img_bw_resize)
+                    
                     _,cont,_= cv2.findContours(img_bw,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
                     im = np.copy(img0)
                     width = 0
@@ -81,8 +100,6 @@ for foldername in os.listdir(dirpath):
                         rect = cv2.minAreaRect(conti)
                         area = cv2.contourArea(conti)
                         box = np.int0(cv2.boxPoints(rect))
-                        #cv2.putText(im,str(rect[1]),tuple(int(i) for i in rect[0]),\
-                        #            cv2.FONT_HERSHEY_SIMPLEX,2,(0,255,0),2,cv2.LINE_AA)
                         w = min(rect[1])*mag
                         h = max(rect[1])*mag
                         isnp = 0
@@ -97,17 +114,23 @@ for foldername in os.listdir(dirpath):
                             height += h
                             count += 1
                     if count > 0:
-                            print ('w='+str(width/count)+'\nh='+str(height/count)+'\n'+str(count)+'\n')
-                    im_resize = cv2.resize(im,(int(c/4),int(r/4)),interpolation = cv2.INTER_AREA)
+                            print ('n='+str(count)+'\n')
+                    im_resize = cv2.resize(im,(800,600),interpolation = cv2.INTER_AREA)
                     cv2.imshow('dst',im_resize)
                     threshflag = thresh
+                    #distflag = dist
                 k = cv2.waitKey(10) & 0xFF
                 if k == ord('n'):
-                    rodw += width
-                    rodh += height
-                    rodn += count
+                    npw += width
+                    nph += height
+                    npn += count
                     print ('Until now:')
-                    print ('w='+str(rodw/rodn)+'\nh='+str(rodh/rodn)+'\nnum='+str(rodn)+'\n')
+                    if nptype == 0:
+                        print ('r='+str((npw+nph)/2/npn)+'\nnum='+str(npn)+'\n')
+                    elif nptype == 1:
+                        print ('d='+str((npw+nph)/2/npn)+'\nnum='+str(npn)+'\n')
+                    elif nptype == 2:
+                        print ('w='+str(npw/npn)+'\nh='+str(nph/npn)+'\nnum='+str(npn)+'\n')
                     cv2.destroyAllWindows()
                     break
                 if k == 27:
