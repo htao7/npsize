@@ -24,30 +24,30 @@ def calc_mag():
         if score >= score_max:
             score_max = score
             magi = sb
-    img_sb = img[2475:2485,1600:3296] #scalebar image
+    img_sb = img[2475:2485,1600:3296] # scale bar image
     ret,img_sb = cv2.threshold(img_sb,50,255,cv2.THRESH_BINARY_INV)
     _,sbcont,_ = cv2.findContours(img_sb,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-    mag = float(magi)/(sbcont[0][0][0][0]-sbcont[10][0][0][0])
+    mag = float(magi)/(sbcont[0][0][0][0]-sbcont[10][0][0][0]) # distance between first and last bar (11 in total)
     return mag
 
 def findsphere():
     pass
 
 def findcube():
-    if w > 20 and h/w <1.2 and area*mag**2/(w*h)>0.9:
+    if w > 20 and h/w <1.2 and area*mag**2/(w*h)>0.9: # width, aspect ratio and squareness
         cv2.drawContours(im, [box], 0, (0,255,0), 3)
         return 1
 
 def findrod():
-    if w > 20 and h/w >3 and area*mag**2/(w*h)>0.8:
+    if w > 20 and h/w >3 and area*mag**2/(w*h)>0.8: # width, aspect ratio and squareness
         cv2.drawContours(im, [box], 0, (0,255,0), 3)
         return 1
     
 dirpath = os.getcwd()
-nptype = -1 #nanoparticle type
-nph = 0
-npw = 0
-npn = 0
+nptype = -1 # nanoparticle type (0: sphere, 1: cube, 2: rod)
+nph = 0 # height of np
+npw = 0 # width of np
+npn = 0 # count of np
 kernel = np.ones((5,5),np.uint8)
 
 
@@ -66,16 +66,17 @@ for foldername in os.listdir(dirpath):
             mag = calc_mag()
             img_blur = cv2.GaussianBlur(img,(5,5),0)
             cv2.namedWindow('dst')
-            cv2.createTrackbar('Thresh','dst',0,100,nothing)
+            cv2.createTrackbar('Thresh','dst',0,100,nothing) # threshhold of image
             #cv2.createTrackbar('Dist','dst',0,100,nothing)
             threshflag = 0
             distflag = 0
             while(True):
                 thresh = cv2.getTrackbarPos('Thresh','dst')
                 #dist = cv2.getTrackbarPos('Dist','dst')
-                if thresh != threshflag:
+                if thresh != threshflag: # only calculate when threshhold changes
                     ret,img_bw = cv2.threshold(img_blur,20+thresh,255,cv2.THRESH_BINARY_INV)
-
+                    
+                    # watershed separation, not good
                     #img_bw = cv2.morphologyEx(img_bw,cv2.MORPH_OPEN,kernel,iterations = 2)
                     #sure_bg = cv2.dilate(img_bw,kernel,iterations = 1)
                     #dist_transform = cv2.distanceTransform(img_bw,cv2.DIST_L2,5)
@@ -97,7 +98,7 @@ for foldername in os.listdir(dirpath):
                     count = 0
                     for conti in cont:
                         #cv2.drawContours(im, [conti], 0, (0,0,255), 2)
-                        rect = cv2.minAreaRect(conti)
+                        rect = cv2.minAreaRect(conti) # minimal rectangle around np
                         area = cv2.contourArea(conti)
                         box = np.int0(cv2.boxPoints(rect))
                         w = min(rect[1])*mag
