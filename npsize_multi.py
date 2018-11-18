@@ -9,7 +9,7 @@ FONT = cv2.FONT_HERSHEY_SIMPLEX
 def nothing(x):
     pass
 
-def calc_mag():
+def calc_mag(): # calculate the magnification
     sb_list = [100,200,500,1000,2000]
     img_scalebar = []
     img_scalebar.append(cv2.imread(dirpath + "\mag\\100nm.png",0))
@@ -34,11 +34,11 @@ def calc_mag():
     mag = float(magi)/(sbcont[0][0][0][0]-sbcont[10][0][0][0])
     return mag
 
-def FindSphere():
+def FindSphere(): # to be developed by Hough circle transform
     pass
 
 def FindCube():
-    if w > 30 and h/w <1.2 and area/(w*h)>0.88:
+    if w > 30 and h/w <1.2 and area/(w*h)>0.88: # standard for cubes
         cv2.drawContours(im, [box], 0, (0,255,0), 2)
         center = (int(rect[0][0]),int(rect[0][1]))
         cv2.putText(im,str(npn+count),center,FONT,1,(0,255,0),2,cv2.LINE_AA)
@@ -48,7 +48,7 @@ def FindCube():
         return 0
 
 def FindRod():
-    if w > 15 and h/w >3 and area/(w*h)>0.8:
+    if w > 15 and h/w >3 and area/(w*h)>0.8: # standard for rods
         cv2.drawContours(im, [box], 0, (0,255,0), 2)
         center = (int(rect[0][0]),int(rect[0][1]))
         cv2.putText(im,str(npn+count),center,FONT,1,(0,255,0),2,cv2.LINE_AA)
@@ -57,7 +57,7 @@ def FindRod():
     else:
         return 0
 
-def enlarge(event,x,y,flags,param):
+def enlarge(event,x,y,flags,param): # mouse capture
     global ix,iy,captureflag,x1,x2,y1,y2
 
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -74,7 +74,7 @@ def enlarge(event,x,y,flags,param):
     elif event == cv2.EVENT_LBUTTONUP:
         captureflag = False
 
-def ExportSize():
+def ExportSize(): # export measurements
     size_file = open(dirpath + '\\' + foldername + '\\npsize.txt','w')
     if nptype == 2:
         size_file.write("%s \n%s \n%s \n\n" % \
