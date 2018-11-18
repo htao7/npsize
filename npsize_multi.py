@@ -4,6 +4,7 @@ import os
 from matplotlib import pyplot as plt
 
 IMG_R = 4
+FONT = cv2.FONT_HERSHEY_SIMPLEX
 
 def nothing(x):
     pass
@@ -37,15 +38,21 @@ def FindSphere():
     pass
 
 def FindCube():
-    if w > 30 and h/w <1.2 and area*mag**2/(w*h)>0.88:
+    if w > 30 and h/w <1.2 and area/(w*h)>0.88:
         cv2.drawContours(im, [box], 0, (0,255,0), 2)
+        center = (int(rect[0][0]),int(rect[0][1]))
+        cv2.putText(im,str(npn+count),center,FONT,1,(0,255,0),2,cv2.LINE_AA)
+        size_img.append((h+w)/2)
         return 1
     else:
         return 0
 
 def FindRod():
-    if w > 20 and h/w >3 and area*mag**2/(w*h)>0.8:
+    if w > 15 and h/w >3 and area/(w*h)>0.8:
         cv2.drawContours(im, [box], 0, (0,255,0), 2)
+        center = (int(rect[0][0]),int(rect[0][1]))
+        cv2.putText(im,str(npn+count),center,FONT,1,(0,255,0),2,cv2.LINE_AA)
+        size_img.append((h,w))
         return 1
     else:
         return 0
@@ -67,14 +74,25 @@ def enlarge(event,x,y,flags,param):
     elif event == cv2.EVENT_LBUTTONUP:
         captureflag = False
 
-        
+def ExportSize():
+    size_file = open(dirpath + '\\' + foldername + '\\npsize.txt','w')
+    if nptype == 2:
+        size_file.write("%s \n%s \n%s \n\n" % \
+                        ('AVG_length = ' + str(nph/npn),'AVG_width = ' + str(npw/npn),'AVG_ar = ' + str(nph/npw)))
+    else:
+        size_file.write("%s \n\n" % \
+                        ('AVG_length/diameter = ' + str((npw+nph)/2/npn)))
+    for i,size in enumerate(size_all):
+        if nptype == 2:
+            size_file.write("%s %s %s\n" % (i,size[0],size[1]))
+        else:
+            size_file.write("%s %s\n" % (i,size))
+    
+    size_file.close()
+
+
 dirpath = os.getcwd()
 nptype = -1 #nanoparticle type
-nph = 0
-npw = 0
-npn = 0
-captureflag = False
-
 
 for foldername in os.listdir(dirpath):
     if foldername.startswith('sphere'):
@@ -85,13 +103,18 @@ for foldername in os.listdir(dirpath):
         nptype = 2
     else:
         continue
+    size_all = []
+    nph = 0
+    npw = 0
+    npn = 0
+    captureflag = False
     for filename in os.listdir(dirpath + '\\' + foldername):
         if filename.endswith('.jpg') or filename.endswith('.tif'):
             img0 = cv2.imread(dirpath + '\\' + foldername + '\\' + filename)
             img = cv2.cvtColor(img0,cv2.COLOR_BGR2GRAY)
             x1 = y1 = 0
             x2 = y2 = 1
-            r,c = img.shape
+            r,c = img.shape # 2788 * 3296
             r2 = int(r/IMG_R)
             c2 = int(c/IMG_R)
             mag = calc_mag()
@@ -114,10 +137,11 @@ for foldername in os.listdir(dirpath):
                     width = 0
                     height = 0
                     count = 0
+                    size_img = []
                     for conti in cont:
                         #cv2.drawContours(im, [conti], 0, (0,0,255), 2)
                         rect = cv2.minAreaRect(conti)
-                        area = cv2.contourArea(conti)
+                        area = cv2.contourArea(conti)*mag**2
                         box = np.int0(cv2.boxPoints(rect))
                         w = min(rect[1])*mag
                         h = max(rect[1])*mag
@@ -141,23 +165,27 @@ for foldername in os.listdir(dirpath):
                 if captureflag == False:
                     im_inset = im[y1*IMG_R:y2*IMG_R,x1*IMG_R:x2*IMG_R]
                     cv2.imshow('inset',im_inset)
-                k = cv2.waitKey(1) & 0xFF
+                k = cv2.waitKey(10) & 0xFF
                 if k == ord('n'):
+                    size_all.extend(size_img)
+                    cv2.imwrite(dirpath + '\\' + foldername + '\\' + \
+                                    os.path.splitext(filename)[0] + '_labelled.jpg',im)
                     npw += width
                     nph += height
                     npn += count
                     if npn == 0:
                         break
                     print ('Until now:')
-                    if nptype == 0:
-                        print ('r=' + str((npw+nph)/2/npn) + '\nnum=' + str(npn) + '\n')
-                    elif nptype == 1:
-                        print ('l=' + str((npw+nph)/2/npn) + '\nnum=' + str(npn) + '\n')
-                    elif nptype == 2:
+                    if nptype == 2:
                         print ('w=' + str(npw/npn) + '\nh=' + str(nph/npn) + '\nnum=' + str(npn) + '\n')
+                    else:
+                        print ('l(/d)=' + str((npw+nph)/2/npn) + '\nnum=' + str(npn) + '\n')
+                        
                     cv2.destroyAllWindows()
                     break
                 elif k == 27:
                     cv2.destroyAllWindows()
                     exit()
+    ExportSize()
+    
 cv2.waitKey(0)
