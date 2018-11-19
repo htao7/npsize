@@ -9,7 +9,7 @@ FONT = cv2.FONT_HERSHEY_SIMPLEX
 def nothing(x):
     pass
 
-def calc_mag(): # calculate the magnification
+def calc_mag():
     sb_list = [100,200,500,1000,2000]
     img_scalebar = []
     img_scalebar.append(cv2.imread(dirpath + "\mag\\100nm.png",0))
@@ -34,30 +34,39 @@ def calc_mag(): # calculate the magnification
     mag = float(magi)/(sbcont[0][0][0][0]-sbcont[10][0][0][0])
     return mag
 
-def FindSphere(): # to be developed by Hough circle transform
-    pass
+def FindSphere():
+    center = (int(x),int(y))
+    radius = int(r)
+    if w > 20 and area/(3.14*(w/2)**2)>0.9:
+        cv2.circle(im,center,radius,(0,255,0),2)
+        cv2.putText(im,str(npn + count),center,FONT,1,(0,255,0),2,cv2.LINE_AA)
+        size_img.append(w)
+        return 1
+    else:
+        return 0
+    
 
 def FindCube():
-    if w > 30 and h/w <1.2 and area/(w*h)>0.88: # standard for cubes
+    if w > 30 and h/w <1.2 and area/(w*h)>0.9:
         cv2.drawContours(im, [box], 0, (0,255,0), 2)
         center = (int(rect[0][0]),int(rect[0][1]))
-        cv2.putText(im,str(npn+count),center,FONT,1,(0,255,0),2,cv2.LINE_AA)
-        size_img.append((h+w)/2)
+        cv2.putText(im,str(npn + count),center,FONT,1,(0,255,0),2,cv2.LINE_AA)
+        size_img.append((h + w)/2)
         return 1
     else:
         return 0
 
 def FindRod():
-    if w > 15 and h/w >3 and area/(w*h)>0.8: # standard for rods
+    if w > 15 and h/w >3 and area/(w*h)>0.8:
         cv2.drawContours(im, [box], 0, (0,255,0), 2)
         center = (int(rect[0][0]),int(rect[0][1]))
-        cv2.putText(im,str(npn+count),center,FONT,1,(0,255,0),2,cv2.LINE_AA)
+        cv2.putText(im,str(npn + count),center,FONT,1,(0,255,0),2,cv2.LINE_AA)
         size_img.append((h,w))
         return 1
     else:
         return 0
 
-def enlarge(event,x,y,flags,param): # mouse capture
+def enlarge(event,x,y,flags,param):
     global ix,iy,captureflag,x1,x2,y1,y2
 
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -74,7 +83,7 @@ def enlarge(event,x,y,flags,param): # mouse capture
     elif event == cv2.EVENT_LBUTTONUP:
         captureflag = False
 
-def ExportSize(): # export measurements
+def ExportSize():
     size_file = open(dirpath + '\\' + foldername + '\\npsize.txt','w')
     if nptype == 2:
         size_file.write("%s \n%s \n%s \n\n" % \
@@ -147,6 +156,8 @@ for foldername in os.listdir(dirpath):
                         h = max(rect[1])*mag
                         isnp = 0
                         if nptype == 0:
+                            (x,y),r = cv2.minEnclosingCircle(conti)
+                            h = w = 2*r*mag
                             isnp = FindSphere()
                         elif nptype == 1:
                             isnp = FindCube()
