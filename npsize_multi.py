@@ -36,9 +36,9 @@ def calc_mag():
 
 def FindSphere():
     center = (int(x),int(y))
-    r = int(r)
-    if w > 20 and area/(3.14*(w/2)**2)>0.85:
-        cv2.circle(im,center,r,(0,255,0),2)
+    radius = int(r)
+    if w > 20 and area/(3.14*(w/2)**2)>0.9:
+        cv2.circle(im,center,radius,(0,255,0),2)
         cv2.putText(im,str(npn + count),center,FONT,1,(0,255,0),2,cv2.LINE_AA)
         size_img.append(w)
         return 1
@@ -47,7 +47,7 @@ def FindSphere():
     
 
 def FindCube():
-    if w > 30 and h/w <1.2 and area/(w*h)>0.88:
+    if w > 30 and h/w <1.2 and area/(w*h)>0.9:
         cv2.drawContours(im, [box], 0, (0,255,0), 2)
         center = (int(rect[0][0]),int(rect[0][1]))
         cv2.putText(im,str(npn + count),center,FONT,1,(0,255,0),2,cv2.LINE_AA)
