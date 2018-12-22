@@ -1,11 +1,11 @@
 # npsize
 nanoparticle size measurement
 
-This program is for NP size measurement from Hitachi HT 7700 TEM images. 
+This program is for NP size measurement & inter-particle space from Hitachi HT 7700 TEM images. 
 
-To use the program, download the 'mag' folder and 'npsize_multi.py'. Put images in a folder starting with "sphere/cube/rod" and run npsize_multi.py. The program will open all the jpg/tif  files and label and measures the respective sizes of the particles (radius for spheres, edge length for cubes, width and height for rods). The particles measured will be highlighted with green rectangles/circles and index number. Press 'n' on keyboard to open the next image. Press 'Esc' to quit. After finishing, all the labelled NP images and the corresponding measurements will be saved in newly generated files.
+To use the program, download the 'mag' folder and 'npsize_multi.py'/'npips_multi.py'. Put images in a folder starting with "sphere/cube/rod" and run the codes. The program will open all the jpg/tif files, then label and measures the sizes & interparticle spaces of the particles. The particles measured will be highlighted with green rectangles/circles and index number. The interparticle space will be labelled with blue lines. Press 'n' on keyboard to open the next image. Press 'Esc' to quit. After finishing, all the labelled NP images and the corresponding measurements will be saved in newly generated files.
 
 Manual adjustments:
 1. Use the trackbar on top to change the size of the binding shapes for more precise measurements.
 2. Enlarge part of the image by dragging on the original image.
-3. Set the standard for desired NPs in the 'Findxxx' functions. 
+3. Change the parameters on top of the codes.
